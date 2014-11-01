@@ -9,6 +9,7 @@ from .base import LoaderBase
 
 
 class Loader(LoaderBase):
+    krsk = '9b968c73-f4d4-4012-8da8-3dacd4d4c1bd'
 
     def _init(self):
         self._model = AddrObj
@@ -25,4 +26,9 @@ class Loader(LoaderBase):
                 log.debug('Date in future - skipping...')
                 return
 
-            self._bulk.push(row)
+            regions = row.attrib.get('AOLEVEL') in ('1', '2', '3') and row.attrib.get('REGIONCODE') == '24'
+            town = row.attrib.get('AOGUID') == self.krsk
+            streets = row.attrib.get('PARENTGUID') == self.krsk and row.attrib['AOLEVEL'] == '7'
+
+            if any([regions, town, streets]):
+                self._bulk.push(row)

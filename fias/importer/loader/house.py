@@ -11,6 +11,7 @@ class Loader(LoaderBase):
     def _init(self):
         self._model = House
         self._bulk = BulkCreate(House, 'houseguid', 'updatedate')
+        self.aoguids = list(AddrObj.objects.values_list('pk', flat=True))
 
     def process_row(self, row):
         if row.tag == 'House':
@@ -25,10 +26,10 @@ class Loader(LoaderBase):
                 return
     
             related_attrs = dict()
-            try:
-                related_attrs['aoguid'] = AddrObj.objects.get(pk=row.attrib['AOGUID'])
-            except AddrObj.DoesNotExist:
+
+            if row.attrib['AOGUID'] not in self.aoguids:
                 print ('AddrObj with GUID `{0}` not found. Skipping house...'.format(row.attrib['AOGUID']))
                 return
 
+            related_attrs['aoguid'] = AddrObj(pk=row.attrib['AOGUID'])
             self._bulk.push(row, related_attrs=related_attrs)
